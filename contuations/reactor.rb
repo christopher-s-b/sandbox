@@ -27,8 +27,6 @@ def poll_keyboard
   if STDIN.ready?
     char = STDIN.getc
     #puts "got char `#{char}`"
-    exit if char == 113 #q
-    #query_async("#{char}") { |item| puts item }
     $key_handlers[char].call if $key_handlers.has_key? char
   end
 end
@@ -41,3 +39,10 @@ def reactor
   end
 end
 
+$key_handlers[113] = Proc.new do # 113 is keycode for Q
+  exit
+end
+
+$key_handlers[97] = Proc.new do # 97 is keycode for A
+  query_async("hello world") { |response| puts response }
+end
