@@ -1,32 +1,20 @@
 require 'io/wait'
 
-$delay = 5
+$delay = 1
 
-
-def query_blocking query
-  p = IO.popen("sleep #{$delay}; echo #{query}")
-  p.readlines
-end
-
-def main_blocking
-  puts query_blocking "foo"
-  puts query_blocking "bar"
-end
-
-
-$pipes = []
+$pipes = {}
 def query_async(query, &callback)
   pipe = IO.popen("sleep #{$delay}; echo #{query}")
-  $pipes.push({:pipe => pipe, :callback => callback})
+  $pipes[pipe]=callback
+  # $pipes.push({:pipe => pipe, :callback => callback})
 end
 
 def poll_pipes
-  $pipes.reject! do |item|
-    pipe = item[:pipe]
-    if pipe.ready? && pipe.eof?  #??
+  $pipes.reject! do |pipe, callback|
+    #pipe = item[:pipe]
+    if pipe.ready? #&& pipe.eof?  #??
       data = pipe.read #??
-      callback = item[:callback]
-      $pipes.delete_at(i)
+      #callback = item[:callback]
       callback.call data
       return true #prune this item
     end
@@ -34,18 +22,21 @@ def poll_pipes
   end
 end
 
+$key_handlers = {}
 def poll_keyboard
   if STDIN.ready?
     char = STDIN.getc
-    puts "got char `#{char}`"
-    query_async("hello world") { |item| puts item }
+    #puts "got char `#{char}`"
+    exit if char == 113 #q
+    #query_async("#{char}") { |item| puts item }
+    $key_handlers[char].call if $key_handlers.has_key? char
   end
 end
 
 def reactor
   system("stty raw -echo")
   while true
-    #poll_pipes
+    poll_pipes
     poll_keyboard
   end
 end
