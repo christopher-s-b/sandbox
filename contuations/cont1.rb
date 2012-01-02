@@ -8,6 +8,6 @@ def main
     puts "in callcc, after k.call: i=#{i}"
   end
   puts "after callcc: i=#{i}"
-
+end
 
 main
