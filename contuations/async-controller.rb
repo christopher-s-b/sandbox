@@ -15,9 +15,9 @@ end
 
 
 $pipes = []
-def query_async query, callback
+def query_async(query, &callback)
   pipe = IO.popen("sleep #{$delay}; echo #{query}")
-  pipes.push({:pipe => pipe, :callback => callback})
+  $pipes.push({:pipe => pipe, :callback => callback})
 end
 
 def poll_pipes
@@ -38,7 +38,7 @@ def poll_keyboard
   if STDIN.ready?
     char = STDIN.getc
     puts "got char `#{char}`"
-    #query_async("hello world", { |item| puts item })
+    query_async("hello world") { |item| puts item }
   end
 end
 
