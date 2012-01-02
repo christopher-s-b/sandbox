@@ -1,0 +1,3 @@
+before callcc statement
+in callcc, before k.call: i=0
+after callcc: i=0
