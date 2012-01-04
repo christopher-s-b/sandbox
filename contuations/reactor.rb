@@ -1,66 +1,11 @@
 require 'io/wait'
 
-$delay = 1
-
-$pipes = {}
-def query_async(query, &callback)
-  pipe = IO.popen("sleep #{$delay}; echo #{query}")
-  $pipes[pipe]=callback
-end
-
-$results = {}
-def query_async_imperative(query)
-  # save off current process execution so we can
-  # resume it when our async io is finished
-  callcc do |k|
-    callback = Proc.new do |response|
-      # when async io is finished, resume the original
-      # process execution context, using global to
-      # communicate the results. How can I do this without
-      # a global?
-      $results[query]=response
-      k.call
-    end
-    query_async(query, &callback)
-    # jump out of application logic and into the reactor.
-    # we will return to application logic when the data is ready
-    $reactor_continuation.call
-  end
-  # resume here when async io is ready 
-  result = $results.delete(query)
-end
-
-def poll_pipes
-  $pipes.reject! do |pipe, callback|
-    if pipe.ready? #&& pipe.eof?  #??
-      data = pipe.read #??
-      callback.call data
-      return true #prune this item
-    end
-    false #keep this item
-  end
-end
-
-$key_handlers = {}
-def poll_keyboard
-  if STDIN.ready?
-    char = STDIN.getc
-    #puts "got char `#{char}`"
-    $key_handlers[char].call if $key_handlers.has_key? char
-  end
-end
 
 def reactor
-  # the reactor is listening for keypress events,
-  # so turn off buffered console IO. TODO: How to
-  # guarantee this happens on process terminiation?
-  system("stty raw -echo")
-
   # save a continuation to the reactor so we can jump
   # back into the reactor while blocking application logic.
   callcc do |k|
     $reactor_continuation = k
-    # reactor is now bootstrapped, start it up!
     $reactor_continuation.call 
   end
 
@@ -71,19 +16,93 @@ def reactor
   end
 end
 
-# 113 is keycode for  Q
-$key_handlers[113] = Proc.new do 
-  system("stty -raw echo")
-  exit
+
+$pipes = {}
+def poll_pipes
+  $pipes.reject! do |pipe, callback|
+    has_data = pipe.ready? #&& pipe.eof?  #??
+    if has_data
+      data = pipe.read
+      callback.call data
+    end
+    has_data
+  end
 end
 
-# 97 is keycode for A
-$key_handlers[97] = Proc.new do 
-  query_async("hello world") { |response| puts response }
+def poll_keyboard
+  if STDIN.ready?
+    char = STDIN.getc
+    if char == 113 # Q
+      system("stty -raw echo")
+      exit
+    end
+    handle_keyboard char
+  end
 end
 
-# 98 = keycode for B
-$key_handlers[98] = Proc.new do
-  response = query_async_imperative("hello world")
-  puts response
+
+
+def handle_keyboard(char)
+  case char
+
+  when 97 # A
+    query_async("A") do |response|
+      query_async(response) do |response|
+        query_async(response) do |response|
+          puts response
+        end
+      end
+    end
+
+  when 98 # B
+    response = query_blocking("B")
+    response = query_blocking(response)
+    response = query_blocking(response)
+    puts response
+
+  when 99 # C
+    response = query_async_imperative("C")
+    response = query_async_imperative(response)
+    response = query_async_imperative(response)
+    puts response
+  end
 end
+
+
+
+def query_async(query, &callback)
+  pipe = IO.popen("sleep .3; echo #{query}")
+  $pipes[pipe]=callback
+end
+
+def query_blocking(query)
+  pipe = IO.popen("sleep .3; echo #{query}")
+  pipe.read
+end
+
+def query_async_imperative(query)
+  # save off current process execution so we can
+  # resume it when our async io is finished
+  callcc do |k|
+    callback = Proc.new do |response|
+      # when async io is finished, resume the original
+      # process execution context, using global to
+      # communicate the results. How can I do this without
+      # a global?
+      $result = response
+      k.call
+    end
+    query_async(query, &callback)
+    # jump out of application logic and into the reactor.
+    # we will return to application logic when the data is ready
+    $reactor_continuation.call
+  end
+
+  # resume here when async io is ready 
+  $result
+end
+
+
+
+system("stty raw -echo") # disable line buffering
+reactor
