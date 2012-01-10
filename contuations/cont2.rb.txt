@@ -1,0 +1,29 @@
+$ ruby cont2.rb
+foo: enter
+pre
+post
+foo: count=4
+#<RuntimeError: showme>
+cont2.rb:6:in `show_stack'
+cont2.rb:19:in `foo'
+cont2.rb:30:in `call'
+cont2.rb:30:in `foo'
+cont2.rb:41
+bar: enter
+foo: count=3
+#<RuntimeError: showme>
+cont2.rb:6:in `show_stack'
+cont2.rb:19:in `foo'
+cont2.rb:30:in `call'
+cont2.rb:30:in `foo'
+cont2.rb:41
+bar: enter
+foo: count=2
+#<RuntimeError: showme>
+cont2.rb:6:in `show_stack'
+cont2.rb:19:in `foo'
+cont2.rb:30:in `call'
+cont2.rb:30:in `foo'
+cont2.rb:41
+bar: enter
+bar: val=''
