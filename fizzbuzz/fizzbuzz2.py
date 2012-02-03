@@ -5,7 +5,7 @@ def mul_of(a,b):
 targets = {3:"fizz", 5:"buzz"}
 
 def fizzbuzz(n):
-  matches = filter(targets.keys(), lambda i: mul_of(n, i)) #curried
-  return str(n) if len(matches) == 0 else "".join(map(matches, lambda i: targets[i]))
+  matches = filter(lambda i: mul_of(n, i), targets.keys()) #curried
+  return str(n) if len(matches) == 0 else "".join(map(lambda i: targets[i], matches))
 
-", ".join(map(range(20), fizzbuzz))
+print ", ".join(map(fizzbuzz, range(20)))
