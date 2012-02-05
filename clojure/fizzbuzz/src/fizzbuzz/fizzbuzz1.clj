@@ -10,4 +10,7 @@
         (multiple-of? n 5) "buzz"
         :else (str n)))
 
-(join ", " (map fizzbuzz (range 1 20)))
+(defn -main [& args]
+  (println 
+    (join ", " (map fizzbuzz (range 1 20)))))
+
