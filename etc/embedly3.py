@@ -14,3 +14,8 @@ print num_words, num_words/2
 print guess, count
 print occs[:guess]
 
+# output:
+# [2520, 1260, 840, 630, 504]
+# 5754 2877
+# 2 3780
+# [2520, 1260]
