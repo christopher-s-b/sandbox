@@ -5,8 +5,10 @@ countWords = lambda occs: reduce(add, occs, 0)
 occs = [2520/(n+1) for n in range(5)] #900
 num_words = countWords(occs) 
 
+
 for guess in range(100):
-    if countWords(occs[:guess]) >= num_words/2: break
+    count = countWords(occs[:guess])
+    if count >= num_words/2: break
 
 print occs
 print num_words, num_words/2 
