@@ -1,19 +1,15 @@
+from math import sqrt
 
+
+# printing visitor for diagnostics
 def pp(x):
     print x
     return x
 
-def meanstdv(x):
-    from math import sqrt
-    n, mean, std = len(x), 0, 0
-    for a in x:
-        mean = mean + a
-    mean = mean / float(n)
-    for a in x:
-        std = std + (a - mean)**2
-    std = sqrt(std / float(n-1))
-    return mean, std
-
+def stdev(col):
+    N = len(col)
+    mean = sum(col)/N
+    return sqrt(sum([(x-mean)**2 for x in col])/N)
 
 def traverse(visit, tree, depth=0):
     for child in tree:
@@ -29,8 +25,7 @@ def doit(tree):
     ps = filter(lambda x: x[0].tag=='p', els)
     depths = [x[1] for x in ps]
 
-    mean, stdev = meanstdv(depths)
-    print mean, stdev
+    print stdev(depths)
 
 
 from lxml import etree
