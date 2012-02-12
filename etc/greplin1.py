@@ -8,6 +8,7 @@ def check(str, pivot, depth=1):
     except IndexError: return depth # or "zero-pad" input
 
 def palindromes(str):
+    "doesn't detect even-length palindromes, oops."
     check_str = lambda pivot: check(str, pivot) # curried
     pivots = range(len(s))
     depths = zip(pivots, map(check_str, pivots))
@@ -22,6 +23,8 @@ def palindromes(str):
 
 sort_len_reverse = lambda str: -1*len(str)
 
-#s="I like racecars that go fast"
-s = open('greplin1.txt').read()
+assert "racecar" == sorted(palindromes("I like racecars that go fast"), key=sort_len_reverse)[0]
+#assert "asdffdsa" == sorted(palindromes("I like rac asdffdsaecars that go fast"), key=sort_len_reverse)[0]
+
+s = open('greplin1b.txt').read()
 print sorted(palindromes(s), key=sort_len_reverse)[0]
