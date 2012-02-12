@@ -10,7 +10,7 @@ def check(str, pivot, depth=1):
 def palindromes(str):
     check_str = lambda pivot: check(str, pivot) # curried
     pivots = range(len(s))
-    depths = zip(pivots, map(check_s, pivots))
+    depths = zip(pivots, map(check_str, pivots))
     found = filter(lambda pair: pair[1]>1, depths)
 
     def extract(pair):
