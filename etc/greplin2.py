@@ -19,10 +19,10 @@ def divisors(n):
     if len(tuples) == 0:
         return []
     else:
-        divisors, remainders = zip(*tuples)
-        return divisors
+        divisors, remainders = zip(*tuples) # can't unpack empty list
+        return list(divisors)
 
-assert divisors(24) == (2, 3, 4)
+assert divisors(24) == [2, 3, 4]
 
 def take_filter(pred, gen, N):
     "take N elements from an infinite generatpr, filtered by pred"
@@ -33,8 +33,8 @@ def take_filter(pred, gen, N):
             found.append(x)
     return found
 
+assert 13 == take_filter(lambda x: x > 10 and is_prime(x), fib_gen(), 1)[0]
 
 pred = lambda x: x > 227000 and is_prime(x)
-#pred = lambda x: x > 10 and is_prime(x)
 X = take_filter(pred, fib_gen(), 1)[0]
 print sum(filter(is_prime, divisors(X+1)))
