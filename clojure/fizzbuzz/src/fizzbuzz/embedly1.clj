@@ -11,7 +11,7 @@
 (assert (= [1 2 3] (oneTo 3)))
 
 (defn fac [n]
-  (reduce * (oneTo n)))
+  (reduce *' (oneTo n))) ;; auto-promoting mul, overflows expected
 (assert (= 3628800 (fac 10)))
 
 (defn parseInt [s]
@@ -30,10 +30,10 @@
 (assert (= [[1 4] [2 5] [3 6]]) (zip [1 2 3] [4 5 6]))
 
 (prn
- (let [r (oneTo 20)
+ (let [r (oneTo 800)
        pairs (zip (map R r) r)]
    (filter
-    (fn [[x _]] (= x 27))
+    (fn [[x _]] (= x 8001))
     pairs)))
 
 
