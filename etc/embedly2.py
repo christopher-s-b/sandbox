@@ -9,7 +9,7 @@ def pp(x):
 def stdev(col):
     N = len(col)
     mean = sum(col)/N
-    return sqrt(sum([(x-mean)**2 for x in col])/N)
+    return sqrt(sum(map(lambda x: (x-mean)**2, col))/N)
 
 def traverse(visit, tree, depth=0):
     for child in tree:
