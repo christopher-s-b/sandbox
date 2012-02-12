@@ -6,22 +6,26 @@ def fib_gen():
         yield a
         a, b = b, a + b
 
-
-
 def is_prime(n):
-    
-    #for x in range(2, sqrt(n)+1):
-    #    if n % x == 0: return true
-
     # imperative version avoids work, is this
     # possible with lazy seqs?
+    return len(divisors(n)) == 0
+
+def divisors(n):
     possible_divisors = range(2, int(sqrt(n))+1)
     remainders = map(lambda x: n % x, possible_divisors)
-    factors = filter(lambda x: x==0, remainders)
-    return len(factors) == 0
+    tuples = filter(lambda x: x[1]==0, zip(possible_divisors, remainders))
+    
+    if len(tuples) == 0:
+        return []
+    else:
+        divisors, remainders = zip(*tuples)
+        return divisors
 
+assert divisors(24) == (2, 3, 4)
 
 def take_filter(pred, gen, N):
+    "take N elements from an infinite generatpr, filtered by pred"
     found = []
     while len(found) < N:
         x = gen.next()
@@ -30,5 +34,7 @@ def take_filter(pred, gen, N):
     return found
 
 
-pred = lambda x: x > 10 and is_prime(x)
-print take_filter(pred, fib_gen(), 1)
+pred = lambda x: x > 227000 and is_prime(x)
+#pred = lambda x: x > 10 and is_prime(x)
+X = take_filter(pred, fib_gen(), 1)[0]
+print sum(filter(is_prime, divisors(X+1)))
