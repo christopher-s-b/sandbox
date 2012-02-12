@@ -12,8 +12,8 @@ assert [1,2,3,4,5] == oneTo(5)
 fac = lambda n: reduce(mul, oneTo(n), 1)
 assert 3628800 == fac(10)
 
-digits = lambda n: [int(c) for c in str(n)]
-assert [1, 2, 3] == digits("123")
+digits = lambda n: map(int, str(n))
+assert [1, 2, 3] == digits(123)
 
 R = lambda n: sum(digits(fac(n)))
 assert 27 == R(10)
