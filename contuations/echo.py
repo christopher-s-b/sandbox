@@ -11,7 +11,7 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         sleep(.5)
         self.wfile.write("hello world\n")
 
-address = ("", 8010)
+address = ("", 8000)
 httpd = ThreadingHTTPServer(address, Handler)
 httpd.serve_forever()
 
