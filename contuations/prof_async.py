@@ -1,7 +1,6 @@
-import gevent
-import sys
-from gevent import monkey; #monkey.patch_all()
-import requests
+import gevent, sys, requests
+from gevent import monkey; monkey.patch_all()
+
 
 def main():
   assert len(sys.argv) >= 3, "bad args: url, count"
