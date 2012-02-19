@@ -13,16 +13,16 @@ def main():
   hammertime(count, url, creds)
 
 def download(url, creds):
-  print "stating download: %s" % url
+  print "request: %s" % url
   r=requests.get(url, auth=creds)
   r.content
   print "%s %s"%(r.status_code, url)
 
-def hammertime(count, url, creds):
+def hammertime(count, url, creds=(None, None)):
   urls = [url]*count
   jobs = [gevent.spawn(download, url, creds) for url in urls]
 
-  gevent.joinall(jobs, timeout=20)
+  gevent.joinall(jobs, timeout=5)
 
 if __name__ == "__main__":
   main()
