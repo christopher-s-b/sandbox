@@ -52,11 +52,6 @@ def fac_seq2():
 fac_seq3 = lambda: reduce_seq(mul, count_seq(), 1)
 assert [1,2,6,24,120] == ftake(fac_seq3(), 5)
 
-#fac2 = lambda N: reduce(mul, ftake(count_seq(), N))
-#assert 120 == fac2(5)
-
-#fac = lambda n: reduce(mul, oneTo(n), 1)
-#assert 3628800 == fac(10)
 
 digits = lambda n: map(int, str(n))
 assert [1, 2, 3] == digits(123)
@@ -75,7 +70,6 @@ assert [[1], [2], [6], [2, 4], [1, 2, 0]] ==  ftake(digits_seq2(fac_seq3()), 5)
 
 def R_seq():
     def _():
-        # this math should be lazy, its overusing memory
         return sum(digits(_.fac())), _.count()
     _.fac = fac_seq3()
     _.count = count_seq()
@@ -84,11 +78,7 @@ def R_seq():
 assert [(27, 9), (27, 10)] == ftake(R_seq(), 10)[8:]
 assert [(8001, 787)] == ftake(ffilter(lambda n: n[0] == 8001, R_seq()), 1)
 
-print ftake(ffilter(lambda n: n[0] == 8001, R_seq()), 1)[0][1]
+def embedly1():
+    print ftake(ffilter(lambda n: n[0] == 8001, R_seq()), 1)[0][1]
 
-#R = lambda n: sum(digits(fac(n)))
-#assert 27 == R(10)
-
-#r = range(1,800)
-#print filter(lambda n: n[0]==8001, zip(map(R, r), r))
 

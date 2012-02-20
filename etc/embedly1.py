@@ -18,6 +18,6 @@ assert [1, 2, 3] == digits(123)
 R = lambda n: sum(digits(fac(n)))
 assert 27 == R(10)
 
-r = range(1,800)
+r = oneTo(787)
 print filter(lambda n: n[0]==8001, zip(map(R, r), r))
 
