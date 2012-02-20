@@ -17,14 +17,15 @@ assert [1, 1, 2, 3, 5] == list(islice(fib_gen(), 5))
 assert [1, 1, 2, 3, 5] == gtake(fib_gen(), 5)
 
 def fib_gen2():
-    prev = [1, 1] #hack for Python 2.x - use 'nonlocal' in Python 3
-    def next():
-        r = prev[0]
-        prev[0], prev[1] = prev[1], prev[0] + prev[1]
-        return r
-    return next
-
+    #funky scope due to python2.x workaround
+    #for python 3.x use nonlocal
+    def _():
+        _.a, _.b = _.b, _.a + _.b
+        return _.a
+    _.a, _.b = 0, 1
+    return _
 assert [1,1,2,3,5] == ftake(fib_gen2(), 5)
+
 
 class fib_gen3:
     def __init__(self):
