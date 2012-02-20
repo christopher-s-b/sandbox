@@ -30,10 +30,32 @@
 (assert (= [[1 4] [2 5] [3 6]]) (zip [1 2 3] [4 5 6]))
 
 (prn
- (let [r (oneTo 800)
-       pairs (zip (map R r) r)]
+ (let [r (oneTo 1000)]
    (filter
     (fn [[x _]] (= x 8001))
-    pairs)))
+    (zip (map R r) r))))
 
 
+
+;; or with lazy seqs
+(defn fib-pair [[a b]] [b (+ a b)])
+(assert (= [5 8] (fib-pair [3 5])))
+(->> [3 5] (fib-pair) (= [5 8]) (assert))
+(assert (->> (fib-pair [3 5]) (= [5 8])))
+
+;;(defn fib-gen (iterate (let [[a b]] [b a+b])))
+;;(defn fib-gen [] (iterate fib-pair [1 1]))
+
+(defn fib-gen [] (map first (iterate fib-pair [1 1])))
+(assert (= [1 1 2 3 5] (take 5 (fib-gen))))
+
+(defn fib [n] (nth (take n (fib-gen)) (dec n)))
+(assert (= 55 (fib 10)))
+
+
+;; (defn fib [n]
+;;   (nth (map first (take n (fib-gen))) (dec n)))
+;; (assert (= 5 (fib 5)))
+
+
+;;(assert (= (->> (fib-gen) (take 1)) [1 1]) )
