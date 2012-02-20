@@ -7,8 +7,6 @@
 from operator import mul, add
 from itertools import ifilter, islice, count
 
-assert [1,2,3,4,5] == list(islice(oneTo(5), 5))
-
 def fac_gen():
     acc, count = 1, 0
     while True:
@@ -30,6 +28,7 @@ def R_seq():
 assert [(27, 9), (27, 10)] == list(islice(R_seq(), 8, 10))
 assert [(8001, 787)] == list(islice(ifilter(lambda n: n[0] == 8001, R_seq()), 1))
 
-print list(islice(ifilter(lambda n: n[0] == 8001, R_seq()), 1))[0][1]
+def embedly1():
+    print list(islice(ifilter(lambda n: n[0] == 8001, R_seq()), 1))[0][1]
 
 
