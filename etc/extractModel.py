@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 model = [
     'param1',
@@ -25,14 +24,11 @@ def traverse(visit, tree):
     
 
 def visit(fields):
-    relevantRequest = filter(lambda item: item in fields, request)
-    instance = {}
-    for param in relevantRequest:
-        instance[param] = request[param]
-    return instance
+    relevantRequestParams = filter(lambda item: item in fields, request)
+    return dict(map(lambda param: (param, request[param]), relevantRequestParams))
 
 def process(request, model):
     return traverse(visit, model)
-    
-print(process(request, model))
+
+assert process(request, model) == {'param2': 42, 'param1': 'hello', 'children': [{'foo': 'foofoo', 'bar': 'barbar'}]}    
 
