@@ -36,6 +36,9 @@
     (zip (map R r) r))))
 
 
+(defn fac-gen []
+  (iterate inc 1))
+(take 1 (fac-gen))
 
 ;; or with lazy seqs
 (defn fib-pair [[a b]] [b (+ a b)])
@@ -44,7 +47,6 @@
 (assert (->> (fib-pair [3 5]) (= [5 8])))
 
 ;;(defn fib-gen (iterate (let [[a b]] [b a+b])))
-;;(defn fib-gen [] (iterate fib-pair [1 1]))
 
 (defn fib-gen [] (map first (iterate fib-pair [1 1])))
 (assert (= [1 1 2 3 5] (take 5 (fib-gen))))
