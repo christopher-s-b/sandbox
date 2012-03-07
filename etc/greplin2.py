@@ -13,19 +13,11 @@ g=fib_gen()
 assert [0, 1, 1, 2, 3, 5, 8] == [g.next() for x in range(7)]
 
 
+def divisible(n, x): return n % x == 0
+
 def divisors(n):
     possible_divisors = range(2, int(sqrt(n))+1)
-    remainders = map(lambda x: n % x, possible_divisors)
-    tuples = filter(lambda x: x[1]==0, zip(possible_divisors, remainders))
-
-    # fascinating - branch complexity necessary because dynamic
-    # language can't know that the empty-list is actually an empty-list
-    # of tuples - information was lost
-    if len(tuples) == 0:
-        return []
-    else:
-        divisors, remainders = zip(*tuples) # can't unpack empty list
-        return list(divisors)
+    return filter(lambda x: divisible(n, x), possible_divisors)
 
 assert divisors(24) == [2, 3, 4]
 
