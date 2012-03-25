@@ -25,13 +25,82 @@
 
 (defn bind [val f]
   (f val))
+
 ;; helper function that means we can invoke a function with the argument
 ;; to the left and the function to the right.
-;; (assert (= (range 4) (m-bind 4 range)))
+;;
+;;    (assert (= (range 4) (m-bind 4 range)))
+;;
+;; this bind is just function application, just makes code look different!
+;; bind in python:
+;;
+;;    def bind(val, f): return f(val)
+;;    assert bind(4, range) == range(4)
+;;
+;; so lets start with our let statement
+;;
+;;    (let [a 1
+;;          b (inc a)]
+;;      (* a b))
+;;
+;; expressed as function composition in python:
+;;
+;;    def first(a):
+;;      def second(b):
+;;        return a*b
+;;      return second(a+1)
+;;    first(1)
+;;
+;; we can refactor this using bind:
+;;
+;;    def first(a):
+;;      def second(b):
+;;        return a*b
+;;      return bind(a+1, second)
+;;    bind(1, first)
+;;
+;; we could use lambdas instead of named functions and express more concisely:
+;;
+;;    bind(1, fna: bind(a+1, fnb: a*b))
+;;
+;; a little bit of formatting:
+;;
+;;    bind(1, fna:
+;;    bind(a+1, fnb:
+;;      a*b))
+;;
+;; this is pretty close to our let statement in clojure:
+;;
+;;    (let [a 1
+;;          b (inc a)]
+;;      (* a b))
+;;
+;; if we didn't have `bind` to turn the order of function application inside out,
+;; so instead of `f(val)` we have something closer to `(val)f`, our nested functions
+;; would have their argument spread away from their function definition, like
+;;
+;;    apply( fna:
+;;    apply( fnb:
+;;      a*b)(a+1)(1)
+;;
+;; or without named functions,
+;;
+;;    (fna: (fnb: a*b)(a+1))(1)
+;;
+;; note how the argument `1` becomes `a`, which sandwiches the inner function.
 
+
+;; now we are ready to do this in clojure:
+(bind 1
+      (fn [a] (bind (inc a)
+                   (fn [b]
+                     (* a b)))))
+
+;; reformatted
 (bind 1        (fn [a]
 (bind (inc a)  (fn [b]
         (* a b)))))
+
 ;; now dependencies are expressed by composition, but the code reads a bit
 ;; more like imperative statements. clojure provides macros for this:
 
