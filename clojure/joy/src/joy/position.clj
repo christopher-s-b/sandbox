@@ -28,3 +28,9 @@
 
 (let [coll [:0 :1 :2 :3 :4 :5 :4]]
   (pos3 :4 coll))
+
+(defn pos4 [pred coll]
+  (for [[i val] (index coll) :when (pred val)] i))
+
+(let [coll [:0 :1 :2 :3 :4 :5 :4]]
+  (pos4 (fn [val] ( = val :4)) coll))
