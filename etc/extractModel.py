@@ -24,8 +24,10 @@ def traverse(visit, tree):
     
 
 def visit(fields):
-    relevantRequestParams = filter(lambda item: item in fields, request)
-    return dict(map(lambda param: (param, request[param]), relevantRequestParams))
+    return {k:v for k,v in request if k in fields}
+#    relevantRequestParams = filter(lambda item: item in fields, request)
+#    print relevantRequestParams, request
+#    return dict(map(lambda param: (param, request[param]), relevantRequestParams))
 
 def process(request, model):
     return traverse(visit, model)
