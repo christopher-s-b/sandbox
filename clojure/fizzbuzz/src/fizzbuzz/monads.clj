@@ -4,6 +4,7 @@
                                     identity-m]]))
 
 ;; based on < http://onclojure.com/2009/03/05/a-monad-tutorial-for-clojure-programmers-part-1/ >
+;; http://www.learningclojure.com/2009/09/how-it-works-monad-im-currently-reading.html
 
 ;; lets implement the let form!
 
@@ -130,6 +131,45 @@
          [a 1
           b nil]
          (+ a b)) ;; business logic doesn't need null checks
+
+;; < http://onclojure.com/2009/03/06/a-monad-tutorial-for-clojure-programmers-part-2/ >
+
+;; now lets implement the for form - nested loops
+
+(for [x (range 5)
+      y (range x)]
+  [x y (* x y)])    ; => ([1 0 0] [2 0 0] [2 1 2] [3 0 0] [3 1 3] [3 2 6] [4 0 0] [4 1 4] [4 2 8] [4 3 12])
+
+(for [x (range 5)
+      y (range x)]
+  (* x y))          ; => (0 0 2 0 3 6 0 4 8 12)
+
+
+;; attempt 1
+(domonad
+ (monad
+  [m-result identity
+   m-bind (fn [seq f] (map f seq))])
+ [x (range 5), y (range x)]
+ (* x y))
+
+;; => (() (0) (0 2) (0 3 6) (0 4 8 12))
+;; bind added a level of nesting.
+;; Technically is a malformed monad. if `bind` adds a level of nesting,
+;; `result` must remove it.
+
+(domonad
+ (monad
+  [m-result (fn [val] (list val))
+   m-bind (fn [seq f] (apply concat (map f seq)))])
+ [x (range 5), y (range x)]
+ (* x y))
+
+;; => (() (0) (0 2) (0 3 6) (0 4 8 12))
+
+
+
+
 
 ;; safe division - express a sequence of divisions without caring for error control
 ;; (defmonad division-monad
