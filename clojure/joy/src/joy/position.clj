@@ -21,5 +21,10 @@
                       (index coll))]
     (for [[i val] pairs] i)))
 
+(defn pos3 [needle coll]
+  (let [pairs (filter (fn [[i val]] (= val needle))
+                      (index coll))]
+    (for [[i val] pairs] i)))
+
 (let [coll [:0 :1 :2 :3 :4 :5 :4]]
-  (pos2 :4 coll))
+  (pos3 :4 coll))
