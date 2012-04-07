@@ -1,10 +1,16 @@
+import itertools
 
-
-#forget about error handling for now
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return list(itertools.chain.from_iterable(listOfLists))
 
 
 def success(val): return val, None
 def error(why): return None, why
+
+def get_val(m_val): return m_val[0]
+def get_error(m_val): return m_val[1]
+
 
 def get_banks(name):
     if name == "Irek": return success(["Bank of America", "Chase"])
@@ -20,51 +26,21 @@ def get_accounts(bank, name):
     elif name == "Alex" and bank == "TD Bank": return success([7, 8])
     else: return error("No account associated with (%s, %s)" % (bank, name))
 
+
 def get_balance(bank, account):
-    return success([250000]) #always one item, don't need seq-m here. better factoring?
+    if bank == "Wells Fargo":
+        return error("Unable to get balance due to technical issue for %s: %s" % (bank, account))
+    else:
+        return success(250000)
 
 def qualified_amount(balance):
-    if balance > 200000: return success(balance)
-    else: return error("Insufficient funds for loan, current balance is %s" % balance)
-
-
-def get_val(m_val): return m_val[0]
-def get_error(m_val): return m_val[1]
-
-
-def get_loan(name):
-
-    m_banks = get_banks(name)
-    if get_error(m_banks):
-        return m_banks
-    banks = get_val(m_banks)
-
-    for bank in banks:
-        m_accounts = get_accounts(bank, name)
-        if get_error(m_accounts):
-            return m_accounts
-        accounts = get_val(m_accounts)
-
-        for account in accounts:
-            m_balance = get_balance(bank, account)
-            if get_error(m_balance):
-                return m_balance
-            balance = get_value(m_balance)
-
-            return qualified_amount(balance)
+    if balance > 200000:
+        return success(balance)
+    else:
+        return error("Insufficient funds for loan, current balance is %s" % balance)
 
 
 
-names = ["Irek", "John", "Alex", "Fred"]
-loans = map(get_loan, names)
-for name, loan in zip(names, loans):
-    print "%s: %s" % (name, loan)
-
-print
-
-
-
-# seq monad
 def seq_unit(x): return [x]
 
 def seq_bind(mval, mf):
@@ -76,6 +52,49 @@ def seq_bind(mval, mf):
     assert isinstance(mval, list)
 
     return flatten(map(mf, mval))
+
+
+
+
+
+
+# def get_loan(name):
+
+#     m_banks = get_banks(name)
+#     if get_error(m_banks):
+#         return m_banks
+#     banks = get_val(m_banks)
+
+#     results = []
+
+#     for bank in banks:
+#         m_accounts = get_accounts(bank, name)
+#         if get_error(m_accounts):
+#             results.extend(m_accounts)
+#             continue
+#         accounts = get_val(m_accounts)
+
+#         for account in accounts:
+#             m_balance = get_balance(bank, account)
+#             if get_error(m_balance):
+#                 results.extend(m_balance)
+#                 continue
+#             balance = get_value(m_balance)
+
+#             return qualified_amount(balance)
+
+
+
+# names = ["Irek", "John", "Alex", "Fred"]
+# loans = map(get_loan, names)
+# for name, loan in zip(names, loans):
+#     print "%s: %s" % (name, loan)
+
+# print
+
+
+
+# seq monad
 
 
 #usage of seq monad
@@ -103,7 +122,7 @@ def chess_squares_2():
 
 assert len(chess_squares_2()) == 64
 assert chess_squares_1() == chess_squares_2()
-
+print chess_squares_2()
 
 
 
@@ -154,7 +173,8 @@ def get_loan(name):
 names = ["Irek", "John", "Alex", "Fred"]
 loans = map(get_loan, names)
 for name, loan in zip(names, loans):
-    print "%s: %s" % (name, loan)
+    pass
+#    print "%s: %s" % (name, loan)
 
 print
 
