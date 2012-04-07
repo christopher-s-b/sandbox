@@ -21,7 +21,7 @@ def get_accounts(bank, name):
     else: return error("No account associated with (%s, %s)" % (bank, name))
 
 def get_balance(bank, account):
-    return 250000
+    return success([250000]) #always one item, don't need seq-m here. better factoring?
 
 def qualified_amount(balance):
     if balance > 200000: return success(balance)
@@ -46,7 +46,12 @@ def get_loan(name):
         accounts = get_val(m_accounts)
 
         for account in accounts:
-            return qualified_amount(get_balance(bank, account))
+            m_balance = get_balance(bank, account)
+            if get_error(m_balance):
+                return m_balance
+            balance = get_value(m_balance)
+
+            return qualified_amount(balance)
 
 
 
