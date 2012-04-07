@@ -1,8 +1,3 @@
-from itertools import chain
-def flatten(listOfLists):
-    """Flatten one level of nesting
-    http://docs.python.org/library/itertools.html#recipes"""
-    return list(chain.from_iterable(listOfLists))
 
 
 #forget about error handling for now
@@ -64,6 +59,51 @@ print
 
 
 
+# seq monad
+def seq_unit(x): return [x]
+
+def seq_bind(mval, mf):
+    """unpack a list of values, invoking mf(val) for each value. Each result is
+    a list of values, collect these lists into a single list.
+    returns a list of results in seq-monad."""
+
+    #print "%s: %s" % (type(mval), mval)
+    assert isinstance(mval, list)
+
+    return flatten(map(mf, mval))
+
+
+#usage of seq monad
+
+ranks = list("abcdefgh")
+files = list("12345678")
+
+def chess_squares_1():
+    return [ (rank, file)
+             for rank in ranks
+             for file in files ]
+
+assert len(chess_squares_1()) == 64
+assert chess_squares_1()[:3] == [('a', '1'), ('a', '2'), ('a', '3')]
+
+
+def chess_squares_2():
+    # this function will use seq-m
+    unit = seq_unit
+    bind = seq_bind
+
+    return bind(ranks, lambda rank:
+           bind(files, lambda file:
+                   unit((rank, file))))
+
+assert len(chess_squares_2()) == 64
+assert chess_squares_1() == chess_squares_2()
+
+
+
+
+
+
 # error monad
 def error_unit(x): return success(x)
 
@@ -80,19 +120,6 @@ def error_bind(mval, mf):
     if error:
         return mval
     return mf(value)
-
-# seq monad
-def seq_unit(x): return [x]
-
-def seq_bind(mval, mf):
-    """unpack a list of values, invoking mf(val) for each value. Each result is
-    a list of values, collect these lists into a single list.
-    returns a list of results in seq-monad."""
-
-    #print "%s: %s" % (type(mval), mval)
-    assert isinstance(mval, list)
-
-    return flatten(map(mf, mval))
 
 # combined monad !!
 def unit(x): return error_unit(seq_unit(x))

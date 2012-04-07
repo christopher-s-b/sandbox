@@ -1,6 +1,7 @@
 (ns fizzbuzz.monads
   (:use [clojure.algo.monads :only [domonad
                                     defmonad
+                                    monad
                                     identity-m]]))
 
 ;; based on < http://onclojure.com/2009/03/05/a-monad-tutorial-for-clojure-programmers-part-1/ >
