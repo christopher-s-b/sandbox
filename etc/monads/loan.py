@@ -60,9 +60,12 @@ def seq_bind(mval, mf):
 
 # combined monad !!
 def unit(x): return error_unit(seq_unit(x))
-def bind(mval, mf):
-    return error_bind(mval, lambda mval: seq_bind(mval, mf))
-    #return seq_bind(mval, lambda mval: error_bind(mval, mf))
+def bind(m_error_val, mf):
+    seqm_f = lambda m_seq_val: seq_bind(m_seq_val, mf)
+    return error_bind(m_error_val, seqm_f)
+
+
+    #return seq_bind(m_error_val, lambda mval: error_bind(mval, mf))
 
 
 
