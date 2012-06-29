@@ -67,8 +67,8 @@
 ;;
 ;; a little bit of formatting:
 ;;
-;;    bind(1, fna:
-;;    bind(a+1, fnb:
+;;    bind(1,   lambda a:
+;;    bind(a+1, lambda b:
 ;;      a*b))
 ;;
 ;; this is pretty close to our let statement in clojure:
@@ -81,13 +81,13 @@
 ;; so instead of `f(val)` we have something closer to `(val)f`, our nested functions
 ;; would have their argument spread away from their function definition, like
 ;;
-;;    apply( fna:
-;;    apply( fnb:
+;;    apply(fn a:
+;;    apply(fn b:
 ;;      a*b)(a+1)(1)
 ;;
 ;; or without named functions,
 ;;
-;;    (fna: (fnb: a*b)(a+1))(1)
+;;    (fn a: (fn b: a*b)(a+1))(1)
 ;;
 ;; note how the argument `1` becomes `a`, which sandwiches the inner function.
 
