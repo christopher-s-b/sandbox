@@ -1,9 +1,9 @@
 (ns fizzbuzz.monads2
-  (:require [clojure.set :only [intersection union] :as set]))
+  (:require [clojure.set :only [intersection union] :as set]
+            [clojure.algo.monads :as monads]))
 
 
-(defn pmapcat [f xs] (mapcat f xs)
-  (apply concat (apply pmap f xs)))
+(defn pmapcat [f xs] (mapcat f xs) (apply concat (apply pmap f xs)))
 
 (defn weight-user
   "what percent of their likes intersect my likes?"
@@ -30,8 +30,22 @@
 
 (let [me (get-current-user)
       my-likes (q-likes me)
-      similar-users (pmapcat q-likers my-likes)
-      recs-by-users (zipmap similar-users (pmap q-likes similar-users))
+      similar-users (mapcat q-likers my-likes)
+      recs-by-users (zipmap similar-users (map q-likes similar-users))
+      weighted-users (weight-users-by-likes recs-by-users my-likes)
+      weighted-recs (weight-recs recs-by-users weighted-users)]
+  weighted-recs)
+
+;; error monad
+;; customized error monad in for- which just continues if you got anything at all
+;; futures - wrap everything in a future
+;; async - wrap everything in a continuation that knows about a reactor
+;; state - which db to query against?
+
+(let [me (get-current-user)
+      my-likes (q-likes me)
+      similar-users (for [like my-likes] (q-likers like))
+      recs-by-users (zipmap similar-users (for [user similar-users] (q-likes user)))
       weighted-users (weight-users-by-likes recs-by-users my-likes)
       weighted-recs (weight-recs recs-by-users weighted-users)]
   weighted-recs)
