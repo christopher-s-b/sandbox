@@ -1,6 +1,6 @@
 (ns fizzbuzz.monads-cps-simple
   (:use [clojure.algo.monads :only [domonad cont-m run-cont call-cc
-                                    m-when with-monad maybe-t]]))
+                                    m-when with-monad maybe-t m-chain]]))
 
 
 ;; biz logic
@@ -83,5 +83,72 @@
 
 
 
-(defn cps-sleep-async [ms]
-  )
+
+
+
+(defn query-async [query callback]
+  (future (Thread/sleep 1000) (callback (str "response: " query))))
+
+
+(defn cps-query-async [query]
+  (call-cc (fn [c-resume] ; invoke c to 'resume'
+             (let [callback (fn [response]
+                              (run-cont (c-resume response)))] ; callback resumes continuation
+               (query-async query callback) ; resume after sleep
+               (mk-cont nil) ; signal not to continue
+               ))))
+
+(defn mysquare [n]
+  (cps-query-async n))
+
+(defn cps-bizlogic-4 [x finished]
+  (with-monad (maybe-t cont-m)
+    (domonad [a (mysquare x)
+              b (mysquare a)
+              c (mysquare b)]
+             (finished c))))
+;; (run-cont (cps-bizlogic-4 "query1" prn))
+
+
+
+
+
+
+(defn cps-bizlogic-5 [x]
+  (with-monad (maybe-t cont-m)
+    (m-chain [mysquare mysquare mysquare])))
+;; (run-cont (cps-bizlogic-5 "query1"))
+
+
+
+
+
+;; (defn query-async [query callback]
+;;   (future (Thread/sleep 1000) (callback (str "response: " query))))
+
+
+(defn mk-cps
+  "wrap a function `f-async` taking only a callback, suitable for use inside cont-m"
+  [f-async]
+  (call-cc (fn [c-resume] ;`c-resume` is a "callback" to the business logic
+             (let [query-callback (fn [response] ;build an internal callback for the query function
+                                                ;that will invoke `c-resume` to return to biz logic
+                              (run-cont (c-resume response)))] ;when we have a response,
+                                                               ;invoke `c-resume` with the response
+               (f-async callback) ;execute the query, it will resume the business logic via above
+                                  ;internal callback which invokes `c-resume` with the response.
+               (mk-cont nil) ;signal to bail out of business logic, we don't have a response yet.
+                             ;we will resume the business logic when we have a response via `c-resume`
+               ))))
+
+(defn query-something [n]
+  (let [doquery (partial query-async (str "query:" n))]
+    (mk-cps doquery)))
+
+(defn cps-bizlogic-6 [x finished-callback]
+  (with-monad (maybe-t cont-m)
+    (domonad [a (query-something x)
+              b (query-something a)
+              c (query-something b)]
+             (finished-callback c))))
+;; (run-cont (cps-bizlogic-6 "query1" prn))
