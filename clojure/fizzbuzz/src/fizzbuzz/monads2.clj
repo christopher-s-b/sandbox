@@ -36,12 +36,6 @@
       weighted-recs (weight-recs recs-by-users weighted-users)]
   weighted-recs)
 
-;; error monad
-;; customized error monad in for- which just continues if you got anything at all
-;; futures - wrap everything in a future
-;; async - wrap everything in a continuation that knows about a reactor
-;; state - which db to query against?
-
 (let [me (get-current-user)
       my-likes (q-likes me)
       similar-users (for [like my-likes] (q-likers like))

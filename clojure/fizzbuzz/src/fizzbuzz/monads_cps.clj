@@ -22,8 +22,15 @@
 (run-cont
   (domonad cont-m
     [x (m-result 1)
-     y (call-cc (fn [c] (def continuation c) (c 2)))]
-    (+ x y)))
+     y (call-cc (fn [c]
+                  (def continuation c)
+                  (m-result 1);(c 2)
+                  )
+                )
+     z (m-result (+ x y))
+     zz (m-result (prn z))]
+    ;(+ x y)
+    z))
 
 ; Now we can call the continuation with whatever argument we want. The
 ; supplied argument takes the place of 2 in the above computation:
