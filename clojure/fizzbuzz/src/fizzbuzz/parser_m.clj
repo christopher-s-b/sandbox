@@ -1,4 +1,4 @@
-(ns fizzbuzz.monads5
+(ns fizzbuzz.parser-m
   (:use [clojure.algo.monads]))
 
 ;; http://brehaut.net/blog/2010/welcome_to_the_machine
@@ -21,9 +21,9 @@
 ;;                 result
 ;;                                             (right state))))])
 
-(def backtrack-m (state-t maybe-m))
+(def parser-m (state-t maybe-m))
 
-(with-monad backtrack-m
+(with-monad parser-m
   (defn run-parser
     "run-parser takes a top level parser and a string or seq'able
          to run the parser on"
@@ -90,43 +90,3 @@
          a default result"
     ([p] (optional p nil))
     ([p default] (choice p (m-result default)))))
-
-
-
-(with-monad backtrack-m
-  (def parse-digit (one-of "0123456789"))
-  (def parse-digits (many1 parse-digit))
-  (def parse-sign (one-of "+-"))
-  (def parse-dot (one-of "."))
-
-  (def parse-integer
-    (domonad [digits parse-digits]
-             [:int digits]))
-
-  (def parse-float
-    (domonad [whole-digits parse-digits
-              _ parse-dot
-              decimal-digits parse-digits]
-             [:float (concat whole-digits "." decimal-digits)]))
-
-  (def parse-number
-    (domonad [sign (optional parse-sign "+")
-              [type digits] (choice (domonad [int parse-integer
-                                              _ eof]
-                                             int)
-                                    (domonad [float parse-float
-                                              _ eof]
-                                             float))]
-                          [type (apply str (cons sign digits))])))
-
-
-(map #(run-parser parse-number %)
-     ["123"
-      ""
-      "123.123"
-      "0"
-      "0.0"
-      "-1"
-      "1 2"])
-
-;; => ([[:int "+123"] ()] nil [[:float "+123.123"] ()] [[:int "+0"] ()] [[:float "+0.0"] ()] [[:int "-1"] ()] nil)
