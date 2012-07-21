@@ -52,3 +52,35 @@ with monad(identity_m):
 
 with monad(maybe_m):
     assert m_chain(lambda x:None, lambda x:2*x)(2) == None
+
+
+
+
+# http://stackoverflow.com/questions/4844010/python-the-mechanism-behind-list-comprehension
+class MonadComprehension(object):
+    def __init__(self, data):
+        self.data = data
+
+    def __iter__(self):
+        for x in self.data:
+            yield x
+
+
+def _chessboard():
+    ranks = list("abcdefgh")
+    files = list("12345678")
+
+    #return [(rank, file) for rank in ranks for file in files]
+    with monad(list_m):
+        return [unit(rank, file)
+                for rank in MonadComprehension(ranks)
+                for file in MonadComprehension(files)]
+
+    with monad(list_m):
+        return bind(ranks, lambda rank:
+               bind(files, lambda file:
+                       unit((rank, file))))
+
+
+assert len(_chessboard()) == 64
+assert _chessboard()[:3] == [('a', '1'), ('a', '2'), ('a', '3')]

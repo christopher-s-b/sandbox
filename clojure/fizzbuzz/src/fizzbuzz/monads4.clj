@@ -18,8 +18,6 @@
             :when (not (zero? b))]
                 (/ a b)))
 
-(m/with-monad (m/sequence-t m/maybe-m)
-  [x (incrange 2)
-   y (incrange -5 5)
-   z (safe-div x y)]
-  (+ 1 z))
+(m/domonad (m/sequence-t m/maybe-m)
+           [y (map #(if (odd? %) % nil) (incrange -5 5))]
+  (+ 1 y))
