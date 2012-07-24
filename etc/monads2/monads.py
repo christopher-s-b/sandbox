@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 
 class monad:
     """Effectively, put the monad definition in lexical scope.
@@ -189,3 +189,97 @@ assert _chessboard()[:3] == [('a', '1'), ('a', '2'), ('a', '3')]
 with monad(maybe_m): assert m_fmap(lambda x:2*x, None) == None
 with monad(maybe_m): assert m_fmap(lambda x:2*x, 2) == 4
 with monad(seq_m): assert m_fmap(lambda x:2*x, range(5)) == [0,2,4,6,8]
+
+
+
+def _build_writer_m():
+
+    def unit(v): return (v, [])
+    def get_val(mv): return mv[0]
+    def get_out(mv): return mv[1]
+
+    def bind(mv, mf):
+        val, out = get_val(mv), get_out(mv)
+        r_mv = mf(val)
+        r_out = get_out(r_mv)
+        final_out = out + r_out if r_out else out
+        return (get_val(r_mv), final_out)
+
+    return {
+        'unit': unit,
+        'bind': bind
+    }
+
+writer_m = _build_writer_m()
+
+def test_writer_m():
+    def withlog(val, out): return (val, [out])
+    def nolog(val): return (val, [])
+
+    def addOne(x):
+        x=x+1
+        return withlog(x, "x+1==%s"%x)
+
+    with monad(writer_m):
+        assert m_chain(addOne, addOne, addOne)(7) == (10, ['x+1==8', 'x+1==9', 'x+1==10'])
+
+        r = bind( withlog(7, "init as 7"), lambda x:
+            bind( withlog(x+1, "+1"), lambda y:
+            bind( nolog(y), lambda z:
+            bind( withlog(x+y+z, "sum the steps"), lambda a:
+                  unit(a) ))))
+
+        assert r == (23, ['init as 7', '+1', 'sum the steps'])
+test_writer_m()
+
+
+def _build_reader_m():
+    """Also known as "environment monad".
+
+    Computation type: Computations which read values from a shared environment.
+
+    Binding strategy: Monad values are functions from the environment to a value. The
+    bound function is applied to the bound value, and both have access to the shared
+    environment.
+
+    Useful for: Maintaining variable bindings, or other shared environment.
+
+    Zero and plus: None.
+
+    Example type: Reader [(String,Value)] a"""
+
+    #"newtype Reader e a = Reader { runReader :: (e -> a) }"
+    #def runReader(env): return Reader(lambda env: env)
+    #def runReader(mf, env): return mf(env)
+
+    def bind(mv, mf):
+        def _(env):
+            val = mv(env)
+            return mf(val)
+        return _
+
+    return {
+        'unit': lambda v: lambda env: v,
+        'bind': bind
+    }
+
+
+reader_m = _build_reader_m()
+
+
+from collections import namedtuple
+def _test_reader_m():
+    Env = namedtuple('Env', ['hostname', 'port', 'outfile'])
+
+    hostname = lambda env: env.hostname
+
+    with monad(reader_m):
+        r = bind(hostname, lambda h:
+            bind(hostname, lambda h2:
+                     unit(h2)))
+
+    env = Env("localhost", 80, "/etc/passwd")
+    print(r(env))
+    #print runReader(r, env)
+
+_test_reader_m()
