@@ -12,6 +12,9 @@ class Monad:
     https://github.com/clojure/algo.monads/blob/3d7baa96d9435245f98e395bcddae4427eba1a85/src/main/clojure/clojure/algo/monads.clj#L276
     """
 
+    # these are difficult to use properly without a type checker unless
+    # you really know what you're doing.
+
     def join(self, mv):
         """Converts a monadic value containing a monadic value into a 'simple'
         monadic value."""
@@ -25,16 +28,18 @@ class Monad:
     def seq(self, ms):
         """'Executes' the monadic values in ms and returns a sequence of the
         basic values contained in them."""
+        #print ("ms: %s"%ms)
         def f(q, p):
+            #print("p: %s, q: %s"%(p,q))
             return self.bind(p, lambda x:
                    self.bind(q, lambda y:
-                            self.unit(x + [y]))) #(cons x y)
-        return reduce(f, self.unit([]), _reverse(ms))
+                   self.unit([x] + y))) #(cons x y)
+        return reduce(f, _reverse(ms), self.unit([]))
 
-    def map(self, f, xs):
+    def map(self, mf, xs):
         """'Executes' the sequence of monadic values resulting from mapping
-        f onto the values xs. f must return a monadic value."""
-        return self.seq(map(f, xs))
+        mf onto the values xs. mf must return a monadic value."""
+        return self.seq(map(mf, xs))
 
     def chain(self, *fns):
         """returns a function of one argument which performs the monadic
@@ -64,32 +69,57 @@ class _Identity_m(Monad):
 
 identity_m = _Identity_m()
 
-identity_m.chain(lambda x:2*x, lambda x:2*x)(2) == 8
-
+def _test_identity_m():
+    dbl = lambda x: 2*x
+    assert identity_m.chain(dbl, dbl)(2) == 8
+    #assert identity_m.map(dbl, [3, 3, 3]) == [6, 6, 6]
+    #assert identity_m.seq([1, 1, 1]) == [1, 1, 1]
+_test_identity_m()
 
 class _Maybe_m(Monad):
-    def bind(self, mv, mf): return mf(mv) if mv else None
+    def bind(self, mv, mf):
+        #careful, [] is falsey, which broke m-seq
+        return mf(mv) if mv!=None else None
     def unit(self, v): return v
 
 maybe_m = _Maybe_m()
-assert maybe_m.chain(lambda x:2*x, lambda x:2*x)(2) == 8
-assert maybe_m.chain(lambda x:None, lambda x:2*x)(2) == None
+def _test_maybe_m():
+    dbl = lambda x: 2*x
+
+    chain = maybe_m.chain
+    assert chain(dbl, dbl)(2) == 8
+    assert chain(lambda x:None, dbl)(2) == None
+    assert chain(dbl, dbl)(2) == 8
+
+    seq = maybe_m.seq
+    assert seq([1, 1, 1]) == [1,1,1]
+    assert seq([None]) == None
+    assert seq([1, None, 1]) == None
+
+    mmap = maybe_m.map
+    assert mmap(dbl, [3, 3, 3]) == [6, 6, 6]
+    assert mmap(lambda _: None, [3, 3, 3]) == None
+
+    failOdd = lambda x: None if x%2==1 else x
+    assert mmap(failOdd, [2, 4, 6]) == [2, 4, 6]
+    assert mmap(failOdd, [2, 4, 5, 6]) == None
+
+_test_maybe_m()
 
 class _Error_m(Monad):
     def bind(self, mv, mf): return mf(mv[0]) if mv[0] else mv
     def unit(self, v): return (v, None)
 
 error_m = _Error_m()
+def ok(val): return (val, None)
+def err(msg): return (None, msg)
 
 def _test_error_m():
-    success = lambda val: unit(val)
-    failure = lambda err: (None, err)
+    assert error_m.chain(lambda x:ok(2*x), lambda x:ok(2*x))(2) == (8, None)
+    assert error_m.chain(lambda x:err("error"), lambda x:ok(2*x))(2) == (None, "error")
+    assert error_m.chain(lambda x:ok(2*x), lambda x:err("error"))(2) == (None, "error")
 
-    assert error_m.chain(lambda x:success(2*x), lambda x:success(2*x))(2) == (8, None)
-    assert error_m.chain(lambda x:failure("error"), lambda x:success(2*x))(2) == (None, "error")
-    assert error_m.chain(lambda x:success(2*x), lambda x:failure("error"))(2) == (None, "error")
-
-
+_test_error_m()
 
 
 from itertools import chain
