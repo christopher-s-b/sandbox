@@ -5,6 +5,17 @@
 ################ Symbol, Env classes
 
 from __future__ import division
+from monads import error_m, err
+
+interp_m = error_m # cont_t state_t error_t identity_m
+
+ok = interp_m.unit
+err = err #needs to be lifted if the monad stack changes
+bind = interp_m.bind
+fmap = interp_m.fmap
+seq = interp_m.seq
+mmap = interp_m.map
+
 
 Symbol = str
 
@@ -39,32 +50,50 @@ isa = isinstance
 def eval(x, env=global_env):
     "Evaluate an expression in an environment."
     if isa(x, Symbol):             # variable reference
-        return env.find(x)[x]
+        return ok(env.find(x)[x])
     elif not isa(x, list):         # constant literal
-        return x
+        return ok(x)
     elif x[0] == 'quote':          # (quote exp)
         (_, exp) = x
-        return exp
+        return ok(exp)
     elif x[0] == 'if':             # (if test conseq alt)
         (_, test, conseq, alt) = x
-        return eval((conseq if eval(test, env) else alt), env)
+        def _doif(val):
+            return (conseq if val else alt)
+        branch = fmap(eval(test, env), _doif)
+        return eval(branch)
     elif x[0] == 'set!':           # (set! var exp)
         (_, var, exp) = x
-        env.find(var)[var] = eval(exp, env)
+        def _doset(val):
+            #assert env.find(var) -- this is a RuntimeError
+            env.find(var)[var] = val
+            return None
+        return fmap(eval(exp, env), _doset)
     elif x[0] == 'define':         # (define var exp)
         (_, var, exp) = x
-        env[var] = eval(exp, env)
+        def _dodefine(val):
+            env[var] = val
+            return None
+        return fmap(eval(exp, env), _dodefine)
+
     elif x[0] == 'lambda':         # (lambda (var*) exp)
         (_, vars, exp) = x
-        return lambda *args: eval(exp, Env(vars, args, env))
+        return ok(lambda *args: eval(exp, Env(vars, args, env))) # ?
+
     elif x[0] == 'begin':          # (begin exp*)
-        for exp in x[1:]:
-            val = eval(exp, env)
-        return val
+        exprs = x[1:]
+        mvs = mmap(lambda exp: eval(exp, env),
+                   exprs)
+        return mvs[-1]
+        #for exp in x[1:]:
+        #    val = eval(exp, env)
+        #return val
     else:                          # (proc exp*)
-        exps = [eval(exp, env) for exp in x]
-        proc = exps.pop(0)
-        return proc(*exps)
+        mvs = map(lambda exp: eval(exp, env), x)
+        mproc, margs = mvs.pop(0), mvs
+        print "mproc: %s, margs: %s"%(mproc, margs)
+        args = seq(margs)
+        return fmap(lambda proc: proc(*args), mproc)
 
 ################ parse, read, and user interaction
 

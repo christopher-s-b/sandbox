@@ -7,6 +7,7 @@
 from __future__ import division
 import re, sys, StringIO
 
+
 class Symbol(str): pass
 
 def Sym(s, symbol_table={}):
@@ -113,9 +114,13 @@ def repl(prompt='lispy> ', inport=InPort(sys.stdin), out=sys.stdout):
             if prompt: sys.stderr.write(prompt)
             x = parse(inport)
             if x is eof_object: return
-            val = eval(x)
-            if val is not None and out: print >> out, to_string(val)
+
+            mval = eval(x) #error_m
+            val, err = mval[0], mval[1]
+            if val is not None and out: print >> out, err if err else to_string(val)
+
         except Exception as e:
+            # syntax errors are out of band; lispy exceptions are handled by the monad
             print '%s: %s' % (type(e).__name__, e)
 
 ################ Environment class
@@ -179,42 +184,64 @@ global_env = add_globals(Env())
 
 ################ eval (tail recursive)
 
+from monads import error_m, ok, err
+
+interp_m = error_m # cont_t state_t error_t identity_m
+ok = interp_m.unit
+bind = interp_m.bind
+fmap = interp_m.fmap
+
 def eval(x, env=global_env):
-    "Evaluate an expression in an environment."
+    "Evaluate an expression in an environment.
+    returns a value in interp_m.
+    lispy exceptions are values in error_m
+    should SyntaxErrors be values in error_m, or be handled out of band?"
     while True:
         if isa(x, Symbol):       # variable reference
-            return env.find(x)[x]
+            return ok(env.find(x)[x])
         elif not isa(x, list):   # constant literal
-            return x
+            return ok(x)
         elif x[0] is _quote:     # (quote exp)
             (_, exp) = x
-            return exp
+            return ok(exp)
         elif x[0] is _if:        # (if test conseq alt)
             (_, test, conseq, alt) = x
-            x = (conseq if eval(test, env) else alt)
+            def _doif(val):
+                return (conseq if val else alt)
+            x = interp_m.fmap(eval(test, env), _doif)
         elif x[0] is _set:       # (set! var exp)
             (_, var, exp) = x
-            env.find(var)[var] = eval(exp, env)
-            return None
+            def _doset(val):
+                env.find(var)[var] = val
+                return None
+            return interp_m.fmap(eval(exp, env), _doset)
         elif x[0] is _define:    # (define var exp)
             (_, var, exp) = x
-            env[var] = eval(exp, env)
-            return None
+            def _dodefine(val):
+                env[var] = val
+                return None
+            return interp_m.fmap(eval(exp, env), _dodefine)
         elif x[0] is _lambda:    # (lambda (var*) exp)
             (_, vars, exp) = x
-            return Procedure(vars, exp, env)
+            return ok(Procedure(vars, exp, env))
         elif x[0] is _begin:     # (begin exp+)
             for exp in x[1:-1]:
-                eval(exp, env)
+                # this ignores any lispy exceptions in the side effects
+                # if env is in a monad, the env side effects are discarded
+                fmap(eval(exp, env), lambda _: None)
             x = x[-1]
         else:                    # (proc exp*)
             exps = [eval(exp, env) for exp in x]
             proc = exps.pop(0)
-            if isa(proc, Procedure):
-                x = proc.exp
-                env = Env(proc.parms, exps, proc.env)
-            else:
-                return proc(*exps)
+            def _doproc(proc):
+                if isa(proc, Procedure):
+                    x = proc.exp
+                    env = Env(proc.parms, exps, proc.env)
+                    # return what? can't implement procs in monadic version
+                    # due to the way norvig did tco
+                else:
+                    return proc(*exps)
+            return fmap(proc, _doproc) #except in TCO case. broken
 
 ################ expand
 
@@ -314,4 +341,6 @@ eval(parse("""(begin
 )"""))
 
 if __name__ == '__main__':
-    repl()
+    import lispytest
+    lispytest.dotests()
+#    repl()

@@ -34,7 +34,7 @@ class Monad:
             return self.bind(p, lambda x:
                    self.bind(q, lambda y:
                    self.unit([x] + y))) #(cons x y)
-        return reduce(f, _reverse(ms), self.unit([]))
+        return self.join(reduce(f, _reverse(ms), self.unit([])))
 
     def map(self, mf, xs):
         """'Executes' the sequence of monadic values resulting from mapping
@@ -107,7 +107,9 @@ def _test_maybe_m():
 _test_maybe_m()
 
 class _Error_m(Monad):
-    def bind(self, mv, mf): return mf(mv[0]) if mv[0] else mv
+    def bind(self, mv, mf):
+        #careful, [] is falsey, which broke m-seq
+        return mf(mv[0]) if mv[0]!=None else mv
     def unit(self, v): return (v, None)
 
 error_m = _Error_m()
@@ -115,9 +117,24 @@ def ok(val): return (val, None)
 def err(msg): return (None, msg)
 
 def _test_error_m():
-    assert error_m.chain(lambda x:ok(2*x), lambda x:ok(2*x))(2) == (8, None)
-    assert error_m.chain(lambda x:err("error"), lambda x:ok(2*x))(2) == (None, "error")
-    assert error_m.chain(lambda x:ok(2*x), lambda x:err("error"))(2) == (None, "error")
+    chain = error_m.chain
+    seq = error_m.seq
+    mmap = error_m.map
+
+    assert chain(lambda x:ok(2*x), lambda x:ok(2*x))(2) == (8, None)
+    assert chain(lambda x:err("error"), lambda x:ok(2*x))(2) == (None, "error")
+    assert chain(lambda x:ok(2*x), lambda x:err("error"))(2) == (None, "error")
+
+    assert seq(map(ok, [1, 1, 1])) == [1,1,1]
+    assert seq([ok(1), err("error"), ok(1)]) == err("error")
+
+    dbl = lambda x: ok(2*x)
+    assert mmap(dbl, [3, 3, 3]) == [6, 6, 6]
+    assert mmap(lambda _: err("error"), [3, 3, 3]) == err("error")
+
+    failOdd = lambda x: err("odd") if x%2==1 else ok(x)
+    assert mmap(failOdd, [2, 4, 6]) == [2, 4, 6]
+    assert mmap(failOdd, [2, 4, 5, 6]) == err("odd")
 
 _test_error_m()
 
