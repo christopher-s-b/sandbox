@@ -1,10 +1,15 @@
 // from < http://news.ycombinator.com/item?id=1275860 >
 
     function bind(mv, mf) {
-        return function(k, end) {
-            return mv(function(result) { return mf(result)(k, end); }, end);
+        return function(k_current, k_end) {
+            var k_continue = function(result) {
+                return mf(result)(k_current, k_end);
+            };
+            return mv(k_continue, k_end); // mv returns the k_cont "what to do next"
         }
     }
+
+    // yes and no build monadic values that say what to do next
 
     function yes(x) {
         return function(k, end) { return k(x); };
@@ -14,6 +19,7 @@
         return function(k, end) { return end(x); };
     }
 
+    // all these mf's are CPS - they return what to do next via the mv builders yes and no
 
     function userid_from_name(person_name) {
         switch (person_name) {
