@@ -192,10 +192,10 @@ bind = interp_m.bind
 fmap = interp_m.fmap
 
 def eval(x, env=global_env):
-    "Evaluate an expression in an environment.
+    """Evaluate an expression in an environment.
     returns a value in interp_m.
     lispy exceptions are values in error_m
-    should SyntaxErrors be values in error_m, or be handled out of band?"
+    should SyntaxErrors be values in error_m, or be handled out of band?"""
     while True:
         if isa(x, Symbol):       # variable reference
             return ok(env.find(x)[x])
