@@ -56,6 +56,10 @@ py_primitive_fns = {
     'symbol?':lambda x: isa(x, Symbol)
 }
 
+special_forms = {
+    'assert': lambda p, errmsg: ok(None) if p else err(errmsg)
+}
+
 def lift(fn): #lift is a misnomer, its not a real monadic lift. what is it?
     "inlining this fn seems to break python?"
     return lambda *args: ok(fn(*args))
@@ -65,6 +69,8 @@ def add_globals(env):
     env.update(vars(math)) # sin, sqrt, ...
     for sym, fn in py_primitive_fns.iteritems():
         env[sym] = lift(fn)
+    for sym, fn in special_forms.iteritems():
+        env[sym] = fn
     return env
 
 global_env = add_globals(Env())
