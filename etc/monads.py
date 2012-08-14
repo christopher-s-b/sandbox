@@ -20,13 +20,15 @@ class Monad:
         monadic value."""
         return self.bind(mv, identity)
 
-    def fmap(self, f, mv):
+    def fmap(self, f, mv): # -> mv
         """Bind the monadic value m to the function returning (f x) for
         argument x"""
         return self.bind(mv, lambda x: self.unit(f(x)))
 
     def seq(self, ms):
-        """'Executes' the monadic values in ms and returns a sequence of the
+        """something is wrong here also, the return types don't make sense.
+
+        'Executes' the monadic values in ms and returns a sequence of the
         basic values contained in them."""
         #print ("ms: %s"%ms)
         def f(q, p):
@@ -36,10 +38,17 @@ class Monad:
                    self.unit([x] + y))) #(cons x y)
         return self.join(reduce(f, _reverse(ms), self.unit([])))
 
-    def map(self, mf, xs):
-        """'Executes' the sequence of monadic values resulting from mapping
-        mf onto the values xs. mf must return a monadic value."""
-        return self.seq(map(mf, xs))
+    def map(self, mf, xs): # -> [x]
+        """map mf over xs 'inside the monad', returning list of simple values?
+        something is wrong with this definition, if we're in error-m, if everything
+        succeeds we get return type [x], if there is a failure we return mv, that
+        doesn't type check.
+
+        'Executes' the sequence of monadic values resulting from mapping
+        mf onto the values xs. mf must return a monadic value. return type is [x]"""
+        #lazy_ms = (mf(x) for x in xs)
+        #return self.seq(lazy_ms)
+        return self.seq(map(mf, xs)) # bug, this needs to be lazy ?
 
     def chain(self, *fns):
         """returns a function of one argument which performs the monadic
@@ -109,7 +118,8 @@ _test_maybe_m()
 class _Error_m(Monad):
     def bind(self, mv, mf):
         #careful, [] is falsey, which broke m-seq
-        return mf(mv[0]) if mv[0]!=None else mv
+        #careful, (None, None) does not signal an error, which broke m-seq
+        return mf(mv[0]) if mv[1]==None else mv
     def unit(self, v): return (v, None)
 
 error_m = _Error_m()
@@ -126,7 +136,8 @@ def _test_error_m():
     assert chain(lambda x:ok(2*x), lambda x:err("error"))(2) == (None, "error")
 
     assert seq(map(ok, [1, 1, 1])) == [1,1,1]
-    assert seq([ok(1), err("error"), ok(1)]) == err("error")
+    assert seq(map(ok, [1, 1, None, 1])) == [1,1,None,1] #ok(None) is not an error
+    assert seq([ok(None), err("error"), ok(1)]) == err("error")
 
     dbl = lambda x: ok(2*x)
     assert mmap(dbl, [3, 3, 3]) == [6, 6, 6]
