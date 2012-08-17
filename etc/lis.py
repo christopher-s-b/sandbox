@@ -79,7 +79,7 @@ isa = isinstance
 
 ################ eval
 
-def eval(x, env=global_env):
+def eval(x, env):
     "Evaluate an expression in an environment."
     if isa(x, Symbol):             # variable reference
         assert env
@@ -187,7 +187,7 @@ def to_string(exp):
 def repl(prompt='lis.py> '):
     "A prompt-read-eval-print loop."
     while True:
-        val = eval(parse(raw_input(prompt)))
+        val = eval(parse(raw_input(prompt)), global_env)
         if val is not None: print to_string(val)
 
 
@@ -196,7 +196,7 @@ def repl(prompt='lis.py> '):
 
 def test():
 
-    lis_tests = [
+    tests = [
         ("(quote (testing 1 (2.0) -3.14e159))", ok(['testing', 1, [2.0], -3.14e159])),
         ("(+ 2 2)", ok(4)),
         ("(+ (* 2 100) (* 1 10))", ok(210)),
@@ -237,7 +237,7 @@ def test():
 
     fails = 0
     for (x, expected) in tests:
-        result = eval(parse(x))
+        result = eval(parse(x), global_env)
         succeeded = (result == expected)
         if not succeeded:
             fails += 1
@@ -248,5 +248,5 @@ def test():
 
 
 if __name__ == '__main__':
-    #test(lis_tests, 'lis.py')
-    repl()
+    test()
+    #repl()
