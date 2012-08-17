@@ -81,9 +81,8 @@ identity_m = _Identity_m()
 def _test_identity_m():
     dbl = lambda x: 2*x
     assert identity_m.chain(dbl, dbl)(2) == 8
-    #assert identity_m.map(dbl, [3, 3, 3]) == [6, 6, 6]
-    #assert identity_m.seq([1, 1, 1]) == [1, 1, 1]
-_test_identity_m()
+    assert identity_m.map(dbl, [3, 3, 3]) == [6, 6, 6]
+    assert identity_m.seq([1, 1, 1]) == [1, 1, 1]
 
 class _Maybe_m(Monad):
     def bind(self, mv, mf):
@@ -94,6 +93,9 @@ class _Maybe_m(Monad):
 maybe_m = _Maybe_m()
 def _test_maybe_m():
     dbl = lambda x: 2*x
+
+    assert maybe_m.fmap(dbl, None) == None
+    assert maybe_m.fmap(dbl, 2) == 4
 
     chain = maybe_m.chain
     assert chain(dbl, dbl)(2) == 8
@@ -113,7 +115,9 @@ def _test_maybe_m():
     assert mmap(failOdd, [2, 4, 6]) == [2, 4, 6]
     assert mmap(failOdd, [2, 4, 5, 6]) == None
 
-_test_maybe_m()
+
+
+
 
 class _Error_m(Monad):
     def bind(self, mv, mf):
@@ -147,7 +151,7 @@ def _test_error_m():
     assert mmap(failOdd, [2, 4, 6]) == [2, 4, 6]
     assert mmap(failOdd, [2, 4, 5, 6]) == err("odd")
 
-_test_error_m()
+
 
 
 from itertools import chain
@@ -161,31 +165,27 @@ class _List_m(Monad):
 
 list_m = _List_m()
 
-assert list_m.bind(range(5), lambda x: list_m.unit(x*2)) == [0,2,4,6,8]
+def _test_list_m():
+    assert list_m.bind(range(5), lambda x: list_m.unit(x*2)) == [0,2,4,6,8]
 
-# equivalent to [y for x in range(5) for y in range(x)]
-assert list_m.chain(range, range)(5) == [0, 0, 1, 0, 1, 2, 0, 1, 2, 3]
-assert list_m.bind(range(5), range) == [0, 0, 1, 0, 1, 2, 0, 1, 2, 3]
+    # equivalent to [y for x in range(5) for y in range(x)]
+    assert list_m.chain(range, range)(5) == [0, 0, 1, 0, 1, 2, 0, 1, 2, 3]
+    assert list_m.bind(range(5), range) == [0, 0, 1, 0, 1, 2, 0, 1, 2, 3]
 
+    def _chessboard():
+        ranks = list("abcdefgh")
+        files = list("12345678")
 
-def _chessboard():
-    ranks = list("abcdefgh")
-    files = list("12345678")
+        return list_m.bind(ranks, lambda rank:
+               list_m.bind(files, lambda file:
+               list_m.unit((rank, file))))
 
-    return list_m.bind(ranks, lambda rank:
-           list_m.bind(files, lambda file:
-           list_m.unit((rank, file))))
+    assert len(_chessboard()) == 64
+    assert _chessboard()[:3] == [('a', '1'), ('a', '2'), ('a', '3')]
 
-assert len(_chessboard()) == 64
-assert _chessboard()[:3] == [('a', '1'), ('a', '2'), ('a', '3')]
-
-
-
-# concept of map generalizes to monad operatons that aren't list
-# comprehensions:
-assert maybe_m.fmap(lambda x:2*x, None) == None
-assert maybe_m.fmap(lambda x:2*x, 2) == 4
-assert list_m.fmap(lambda x:2*x, range(5)) == [0,2,4,6,8]
+    # concept of map generalizes to monad operatons that aren't list
+    # comprehensions:
+    assert list_m.fmap(lambda x:2*x, range(5)) == [0,2,4,6,8]
 
 
 
@@ -204,7 +204,7 @@ class _Writer_m(Monad):
 
 writer_m = _Writer_m()
 
-def test_writer_m():
+def _test_writer_m():
     def withlog(val, out): return (val, [out])
     def nolog(val): return (val, [])
 
@@ -221,7 +221,6 @@ def test_writer_m():
         writer_m.unit( a )))))
 
     assert r == (23, ['init as 7', '+1', 'sum the steps'])
-test_writer_m()
 
 
 class _Reader_m(Monad):
@@ -272,4 +271,17 @@ def _test_reader_m():
     env = Env("localhost", 80, "/etc/passwd")
     assert bootstrap()(env) == ["/etc/passwd", 80, "localhost"]
 
-#_test_reader_m()
+
+
+
+def _run_tests():
+    _test_identity_m()
+    _test_maybe_m()
+    _test_error_m()
+    _test_list_m()
+    _test_writer_m()
+    #_test_reader_m()
+    print("all tests passed")
+
+
+#if __name__=="__main__": _run_tests()
