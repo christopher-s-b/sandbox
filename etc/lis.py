@@ -134,8 +134,9 @@ def eval(x, env):
         #   return val
         #
         def _dobegin(exp, exprs): # -> mv
-            if not exprs: return eval(exp, env)
-            return bind(eval(exp, env), lambda _: _dobegin(exprs[0], exprs[1:]))
+            mfirst = eval(exp, env)
+            if not exprs: return mfirst
+            return bind(mfirst, lambda _: _dobegin(exprs[0], exprs[1:]))
         return _dobegin(exprs[0], exprs[1:])
 
     else:                          # (proc exp*)
