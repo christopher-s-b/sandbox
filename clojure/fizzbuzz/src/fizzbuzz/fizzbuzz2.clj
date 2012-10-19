@@ -3,7 +3,7 @@
 
 
 
-(def targets (sorted-map 3 "fizz" 5 "buzz"))
+(def targets (sorted-map 3 "fizz" 5 "buzz" 7 "baz"))
 
 ;; match any applicable factors
 (defn match [n, factors]
