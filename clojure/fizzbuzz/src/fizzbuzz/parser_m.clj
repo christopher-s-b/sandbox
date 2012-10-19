@@ -1,27 +1,10 @@
 (ns fizzbuzz.parser-m
+  "reconstructed from http://brehaut.net/blog/2010/ghosts_in_the_machine (Andrew Brehaut)"
   (:use [clojure.algo.monads]))
 
-;; http://brehaut.net/blog/2010/welcome_to_the_machine
-
-;; (defmonad backtrack-state
-;;   [m-result (fn [value]
-;;               (fn [state]
-;;                 [value state]))
-
-;;    m-bind (fn [computation func]
-;;             (fn [state]
-;;               (when-let [[value new-state] (computation state)]
-;;                 ((func value) new-state))))
-
-;;    m-zero (fn [new-state] nil)
-
-;;    m-plus (fn [left right]
-;;             (fn [state]
-;;               (if-let [result (left state)]
-;;                 result
-;;                                             (right state))))])
 
 (def parser-m (state-t maybe-m))
+
 
 (with-monad parser-m
   (defn run-parser
