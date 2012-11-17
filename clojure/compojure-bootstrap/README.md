@@ -1,15 +1,8 @@
 # compojure-bootstrap
 
-I'm an app. Or maybe I'm a library? I haven't decided yet. 
+trivial example of compojure parsing webforms to prove that it works
 
-The choice is up to you!
+run with:
 
-## Usage
-
-FIXME
-
-## License
-
-Copyright © 2012 FIXME
-
-Distributed under the Eclipse Public License, the same as Clojure.
+    lein deps
+    lein run
