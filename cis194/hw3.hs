@@ -20,3 +20,16 @@ localMaxima xs = map proj2 $ filter isLocalMaximum (sliding3 xs)
 
 -- *Main> filter isLocalMaximum (sliding3 [1,5,2,6,3])
 -- [(1,5,2),(2,6,3)]
+
+
+-- another way
+filterBy :: (b -> Bool) -> ([a] -> [b]) -> [a] -> [a]
+filterBy p f as = as'
+  where indexedAs = zipWith (,) [0..] as
+        indexedBs = zipWith (,) [0..] (f as)
+        indexedBs' = filter p indexedBs
+        indexes = map fst indexedBs
+        as' = map (\i -> snd (indexedAs !! i)) indexes
+
+localMaxima' :: Integral a => [a] -> [a]
+localMaxima' xs = filterBy isLocalMaximum sliding3 xs
