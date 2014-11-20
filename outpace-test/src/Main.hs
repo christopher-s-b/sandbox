@@ -3,8 +3,7 @@ module Main where
 import System.IO
 import Data.List.Split (splitOn, chunksOf)
 import Data.Char (digitToInt)
---import Control.Monad (sequence)
-
+import Data.List (intercalate)
 
 type AccountNumber = [Digit] -- a big number with 9 digits
 type Digit = Char -- a single digit
@@ -65,6 +64,12 @@ validate p@(OK, a) | isValid a = p
                    | otherwise = (ERR, a)
 validate p = p
 
+formatResultLine :: (ScanError, AccountNumber) -> String
+formatResultLine (e, a) = a ++ " " ++ render e
+  where render OK = ""
+        render ILL = show ILL
+        render ERR = show ERR
+
 main :: IO ()
 main = do
   handle <- openFile "sample.txt" ReadMode
@@ -72,5 +77,7 @@ main = do
   let accountStrings = splitOn "\n\n" contents
   let accountNumbers = map parseAccountNumber accountStrings
   let xs = map validate accountNumbers
-  putStrLn (show xs)
+
+  hOut <- openFile "results.txt" WriteMode
+  hPutStrLn hOut $ intercalate "\n" (map formatResultLine xs)
   hClose handle
