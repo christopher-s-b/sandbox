@@ -11,20 +11,20 @@ type Digit = Char -- a single digit
 type SoupDigit = [Char] -- should be length 9 of: {_, |, space}
 type SoupAccountNumber = [SoupDigit] -- account numbers have 9 digits
 
-data ScanError = ILL | ERR deriving (Show)
+data ScanError = OK | ILL | ERR deriving (Show, Eq)
 
-digitSoupToNumber :: SoupDigit -> Either ScanError Digit
-digitSoupToNumber "     |  |" = Right '1'
-digitSoupToNumber " _  _||_ " = Right '2'
-digitSoupToNumber " _  _| _|" = Right '3'
-digitSoupToNumber "   |_|  |" = Right '4'
-digitSoupToNumber " _ |_  _|" = Right '5'
-digitSoupToNumber " _ |_ |_|" = Right '6'
-digitSoupToNumber " _   |  |" = Right '7'
-digitSoupToNumber " _ |_||_|" = Right '8'
-digitSoupToNumber " _ |_| _|" = Right '9'
-digitSoupToNumber " _ | ||_|" = Right '0'
-digitSoupToNumber _           = Left ILL
+digitSoupToNumber :: SoupDigit -> (ScanError, Digit)
+digitSoupToNumber "     |  |" = (OK, '1')
+digitSoupToNumber " _  _||_ " = (OK, '2')
+digitSoupToNumber " _  _| _|" = (OK, '3')
+digitSoupToNumber "   |_|  |" = (OK, '4')
+digitSoupToNumber " _ |_  _|" = (OK, '5')
+digitSoupToNumber " _ |_ |_|" = (OK, '6')
+digitSoupToNumber " _   |  |" = (OK, '7')
+digitSoupToNumber " _ |_||_|" = (OK, '8')
+digitSoupToNumber " _ |_| _|" = (OK, '9')
+digitSoupToNumber " _ | ||_|" = (OK, '0')
+digitSoupToNumber _           = (ILL, '?')
 
 tuplify3 :: [a] -> (a,a,a)
 tuplify3 [x,y,z] = (x,y,z)
@@ -37,8 +37,16 @@ fromDigits :: [Int] -> Int
 fromDigits = foldl addDigit 0
    where addDigit num d = 10 * num + d
 
-parseAccountNumber :: String -> Either ScanError AccountNumber
-parseAccountNumber soup = sequence digits
+sequenceScans :: [(ScanError, Digit)] -> (ScanError, AccountNumber)
+sequenceScans as | all (== OK) errors = (OK, digits)
+                 | any (== ILL) errors = (ILL, digits)
+                 | otherwise = error "impossible"
+  where
+    digits = (map snd as) :: AccountNumber
+    errors = (map fst as) :: [ScanError]
+
+parseAccountNumber :: String -> (ScanError, AccountNumber)
+parseAccountNumber soup = sequenceScans digits
   where
     scannedLines = tuplify3 $ lines soup
     (topScans,middleScans,bottomScans) = mapTuple3 (chunksOf 3) scannedLines
@@ -52,10 +60,10 @@ dotProduct as bs = sum $ zipWith (*) as bs
 isValid :: AccountNumber -> Bool
 isValid a = dotProduct [1..9] (map digitToInt (reverse a)) `mod` 11 == 0
 
-validate :: Either ScanError AccountNumber -> Either ScanError AccountNumber
-validate e@(Left _) = e
-validate e@(Right a) | isValid a = e
-                     | otherwise = Left ERR
+validate :: (ScanError, AccountNumber) -> (ScanError, AccountNumber)
+validate p@(OK, a) | isValid a = p
+                   | otherwise = (ERR, a)
+validate p = p
 
 main :: IO ()
 main = do
