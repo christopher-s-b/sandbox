@@ -3,12 +3,6 @@ module Main where
 import System.IO
 import Data.List.Split (splitOn, chunksOf)
 
-test :: [Char]
-test = "    _  _     _  _  _  _  _\n\
-       \  | _| _||_||_ |_   ||_||_|\n\
-       \  ||_  _|  | _||_|  ||_| _|\n"
-
-
 
 type AccountNumber = Int -- a big number with 9 digits
 type Digit = Int -- a single digit
@@ -25,9 +19,9 @@ digitSoupToNumber " _ |_  _|" = 5
 digitSoupToNumber " _ |_ |_|" = 6
 digitSoupToNumber " _   |  |" = 7
 digitSoupToNumber " _ |_||_|" = 8
-digitSoupToNumber " _|_| _|" = 9
+digitSoupToNumber " _ |_| _|" = 9
 -- 0
-digitSoupToNumber _ = error "invalid digit"
+digitSoupToNumber _ = 0 --error "invalid digit"
 
 
 
