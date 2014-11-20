@@ -47,6 +47,13 @@ parseAccountNumber soup = accountNumber
     digits = map digitSoupToNumber digitSoups
     accountNumber = fromDigits digits
 
+digs :: Integral x => x -> [x]
+digs 0 = []
+digs x = digs (x `div` 10) ++ [x `mod` 10]
+
+validate :: AccountNumber -> Bool
+validate a = (sum (zipWith (*) [1..9] (reverse (digs a)))) `mod` 11 == 0
+
 main :: IO ()
 main = do
   handle <- openFile "sample.txt" ReadMode
