@@ -69,6 +69,31 @@ formatResultLine (e, a) = a ++ " " ++ render e
         render ILL = show ILL
         render ERR = show ERR
 
+
+test = "\
+\    _  _     _  _  _  _  _ \n\
+\  | _| _||_||_ |_   ||_||_|\n\
+\  ||_  _|  | _||_|  ||_| _|\n"
+
+mapcat f = concat . map f
+
+gen' :: SoupDigit -> [SoupDigit]
+gen' as = mapcat f [1..9]
+  where
+    f n = [q "|", q "_"]
+      where
+        q c = take n as ++ c ++ drop (n + 1) as
+
+gen :: SoupAccountNumber -> [SoupAccountNumber]
+gen as = map gen' as
+
+
+-- findValid :: SoupAccountNumber -> SoupAccountNumber
+-- findValid a = head $ filter f (gen a)
+--   where
+--     f = isValid . snd . parseAccountNumber
+
+
 parseBankOcrSoup :: String -> String
 parseBankOcrSoup input = output
   where
